@@ -32,7 +32,7 @@ polybar conf =
                    , ppHiddenNoWindows = wrap "%{F#333333}" "%{F-}"
                    , ppUrgent = wrap "%{F#ff0000}" "%{F-}"
                    , ppSep = "%{F#888888} | %{F-}"
-                   , ppTitle = shorten 30
+                   , ppTitle = shorten 48
                    , ppTitleSanitize = id
                    , ppOrder = \(ws:_:t:_) -> [ws, t]
                    , ppOutput = \s -> safeSpawn
@@ -61,7 +61,7 @@ main = xmonad . ewmhFullscreen . ewmh . docks . polybar $ myConfig
             , activeTextColor = "#00ff00"
             , inactiveTextColor = "#ffffff"
             , urgentTextColor = "#ff0000"
-            , fontName = "xft:Fira Code:size=12"
+            , fontName = "xft:Fira Code:size=11"
             }
 
     defaultLayout =
@@ -130,6 +130,7 @@ main = xmonad . ewmhFullscreen . ewmh . docks . polybar $ myConfig
                                , runOrRaise
                                    "notion-app"
                                    (className =? "notion-app"))])
+                       , ((modm, xK_t), safeSpawn "polybar-msg" ["action", "date", "toggle"])
                        , ((modm, xK_F6), spawn "pavucontrol")
                        , ( (noModMask, xF86XK_MonBrightnessUp)
                          , spawn "light -A 5")

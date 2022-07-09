@@ -1,0 +1,3 @@
+#!/bin/sh -eu
+stack build
+cp -f $(stack exec -- which xmonad) $1

@@ -45,7 +45,7 @@ polybar conf =
        }
 
 main :: IO ()
-main = xmonad . ewmhFullscreen . ewmh . docks . polybar $ myConfig
+main = xmonad . ewmh . docks . polybar $ myConfig
   where
     modm = mod4Mask
 
@@ -130,7 +130,8 @@ main = xmonad . ewmhFullscreen . ewmh . docks . polybar $ myConfig
                                , runOrRaise
                                    "notion-app"
                                    (className =? "notion-app"))])
-                       , ((modm, xK_t), safeSpawn "polybar-msg" ["action", "date", "toggle"])
+                       , ( (modm, xK_t)
+                         , safeSpawn "polybar-msg" ["action", "date", "toggle"])
                        , ((modm, xK_F6), spawn "pavucontrol")
                        , ( (noModMask, xF86XK_MonBrightnessUp)
                          , spawn "light -A 5")

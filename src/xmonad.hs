@@ -18,7 +18,6 @@ import           XMonad.Util.Run
 import           XMonad.Util.Ungrab
 import           Data.Map.Strict as M
 import           System.Exit
-import           System.IO
 import           Graphics.X11.ExtraTypes.XF86
 
 polybar :: XConfig l -> XConfig l
@@ -122,14 +121,26 @@ main = xmonad . ewmh . docks . polybar $ myConfig
                                    (className =? "vifm"))
                              , ( (shiftMask, xK_f)
                                , runOrRaise "pcmanfm" (className =? "pcmanfm"))
+                             , ( (noModMask, xK_g)
+                               , raiseMaybe
+                                   (spawn "kitty --class gp gp")
+                                   (className =? "gp"))
                              , ( (noModMask, xK_m)
                                , runOrRaise
-                                   "thunderbird"
-                                   (className =? "Thunderbird"))
+                                   "mathematica"
+                                   (className =? "Mathematica"))
                              , ( (noModMask, xK_n)
                                , runOrRaise
                                    "notion-app"
-                                   (className =? "notion-app"))])
+                                   (className =? "notion-app"))
+                             , ( (noModMask, xK_s)
+                               , raiseMaybe
+                                   (spawn "kitty --class Singular Singular")
+                                   (className =? "Singular"))
+                             , ( (noModMask, xK_t)
+                               , runOrRaise
+                                   "thunderbird"
+                                   (className =? "Thunderbird"))])
                        , ( (modm, xK_t)
                          , safeSpawn "polybar-msg" ["action", "date", "toggle"])
                        , ((modm, xK_F6), spawn "pavucontrol")

@@ -82,6 +82,68 @@ main = xmonad . ewmh . docks . polybar $ myConfig
       . smartBorders
       $ defaultLayout
 
+    myKeys =
+      [ ((modm, xK_Return), spawn "kitty")
+      , ((modm, xK_b), sendMessage ToggleStruts)
+      , ((modm, xK_p), spawn "rofi -show drun")
+      , ((modm, xK_q), kill)
+      , ((modm, xK_f), sendMessage (Toggle NBFULL))
+      , ( (modm, xK_g)
+        , toggleWindowSpacingEnabled <+> toggleScreenSpacingEnabled)
+      , ((modm, xK_s), sendMessage SwapWindow)
+      , ( (modm, xK_x)
+        , submap . M.fromList
+          $ [ ((noModMask, xK_b), spawn "polybar-msg cmd restart")
+            , ((noModMask, xK_l), spawn "loginctl lock-session")
+            , ((noModMask, xK_o), spawn "systemctl poweroff")
+            , ((noModMask, xK_q), io exitSuccess)
+            , ((noModMask, xK_r), spawn "systemctl reboot")
+            , ((noModMask, xK_x), spawn "xkill")])
+      , ( (modm, xK_r)
+        , submap . M.fromList
+          $ [ ( (noModMask, xK_b)
+              , runOrRaise "firefox" (className =? "firefox"))
+            , ((noModMask, xK_d), spawn "discord")
+            , ( (noModMask, xK_f)
+              , raiseMaybe
+                  (spawn "kitty --class vifm vifm")
+                  (className =? "vifm"))
+            , ( (shiftMask, xK_f)
+              , runOrRaise "pcmanfm" (className =? "pcmanfm"))
+            , ( (noModMask, xK_g)
+              , raiseMaybe (spawn "kitty --class gp gp") (className =? "gp"))
+            , ( (noModMask, xK_m)
+              , runOrRaise "mathematica" (className =? "Mathematica"))
+            , ( (noModMask, xK_n)
+              , runOrRaise "notion-app" (className =? "notion-app"))
+            , ( (noModMask, xK_s)
+              , raiseMaybe
+                  (spawn "kitty --class Singular Singular")
+                  (className =? "Singular"))
+            , ( (noModMask, xK_t)
+              , runOrRaise "thunderbird" (className =? "Thunderbird"))])
+      , ((modm, xK_t), safeSpawn "polybar-msg" ["action", "date", "toggle"])
+      , ((modm, xK_F6), spawn "pavucontrol")
+      , ((noModMask, xF86XK_MonBrightnessUp), spawn "light -A 5")
+      , ((noModMask, xF86XK_MonBrightnessDown), spawn "light -U 5")
+      , ((modm, xK_F2), spawn "redshift -P -O 2500")
+      , ((modm, xK_F3), spawn "redshift -x")
+      , ( (noModMask, xF86XK_AudioMute)
+        , spawn "amixer -D pulse sset Master toggle")
+      , ( (noModMask, xF86XK_AudioLowerVolume)
+        , spawn "amixer -D pulse sset Master 5%-")
+      , ( (noModMask, xF86XK_AudioRaiseVolume)
+        , spawn "amixer -D pulse sset Master 5%+")
+      , ((noModMask, xF86XK_AudioPrev), spawn "playerctl previous")
+      , ((noModMask, xF86XK_AudioPlay), spawn "playerctl play-pause")
+      , ((noModMask, xF86XK_AudioNext), spawn "playerctl next")
+      , ( (noModMask, xK_Print)
+        , spawn "scrot $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")
+      , ( (controlMask, xK_Print)
+        , unGrab
+          >> spawn
+            "scrot -f -s $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")]
+
     myConfig =
       def { normalBorderColor = "#888888"
           , focusedBorderColor = "#ff00ff"
@@ -94,81 +156,7 @@ main = xmonad . ewmh . docks . polybar $ myConfig
           , focusFollowsMouse = False
           , clickJustFocuses = False
           }
-      `additionalKeys` [ ((modm, xK_Return), spawn "kitty")
-                       , ((modm, xK_b), sendMessage ToggleStruts)
-                       , ((modm, xK_p), spawn "rofi -show drun")
-                       , ((modm, xK_q), kill)
-                       , ((modm, xK_f), sendMessage (Toggle NBFULL))
-                       , ( (modm, xK_g)
-                         , toggleWindowSpacingEnabled
-                           <+> toggleScreenSpacingEnabled)
-                       , ((modm, xK_s), sendMessage SwapWindow)
-                       , ( (modm, xK_x)
-                         , submap . M.fromList
-                           $ [ ( (noModMask, xK_l)
-                               , spawn "loginctl lock-session")
-                             , ((noModMask, xK_o), spawn "systemctl poweroff")
-                             , ((noModMask, xK_r), spawn "systemctl reboot")
-                             , ((noModMask, xK_q), io exitSuccess)
-                             , ((noModMask, xK_x), spawn "xkill")])
-                       , ( (modm, xK_r)
-                         , submap . M.fromList
-                           $ [ ( (noModMask, xK_b)
-                               , runOrRaise "firefox" (className =? "firefox"))
-                             , ( (noModMask, xK_f)
-                               , raiseMaybe
-                                   (spawn "kitty --class vifm vifm")
-                                   (className =? "vifm"))
-                             , ( (shiftMask, xK_f)
-                               , runOrRaise "pcmanfm" (className =? "pcmanfm"))
-                             , ( (noModMask, xK_g)
-                               , raiseMaybe
-                                   (spawn "kitty --class gp gp")
-                                   (className =? "gp"))
-                             , ( (noModMask, xK_m)
-                               , runOrRaise
-                                   "mathematica"
-                                   (className =? "Mathematica"))
-                             , ( (noModMask, xK_n)
-                               , runOrRaise
-                                   "notion-app"
-                                   (className =? "notion-app"))
-                             , ( (noModMask, xK_s)
-                               , raiseMaybe
-                                   (spawn "kitty --class Singular Singular")
-                                   (className =? "Singular"))
-                             , ( (noModMask, xK_t)
-                               , runOrRaise
-                                   "thunderbird"
-                                   (className =? "Thunderbird"))])
-                       , ( (modm, xK_t)
-                         , safeSpawn "polybar-msg" ["action", "date", "toggle"])
-                       , ((modm, xK_F6), spawn "pavucontrol")
-                       , ( (noModMask, xF86XK_MonBrightnessUp)
-                         , spawn "light -A 5")
-                       , ( (noModMask, xF86XK_MonBrightnessDown)
-                         , spawn "light -U 5")
-                       , ((modm, xK_F2), spawn "redshift -P -O 2500")
-                       , ((modm, xK_F3), spawn "redshift -x")
-                       , ( (noModMask, xF86XK_AudioMute)
-                         , spawn "amixer -D pulse sset Master toggle")
-                       , ( (noModMask, xF86XK_AudioLowerVolume)
-                         , spawn "amixer -D pulse sset Master 5%-")
-                       , ( (noModMask, xF86XK_AudioRaiseVolume)
-                         , spawn "amixer -D pulse sset Master 5%+")
-                       , ( (noModMask, xF86XK_AudioPrev)
-                         , spawn "playerctl previous")
-                       , ( (noModMask, xF86XK_AudioPlay)
-                         , spawn "playerctl play-pause")
-                       , ( (noModMask, xF86XK_AudioNext)
-                         , spawn "playerctl next")
-                       , ( (noModMask, xK_Print)
-                         , spawn
-                             "scrot $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")
-                       , ( (controlMask, xK_Print)
-                         , unGrab
-                           >> spawn
-                             "scrot -f -s $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")]
+      `additionalKeys` myKeys
       `removeKeys` [ (modm .|. shiftMask, xK_Return)
                    , (modm .|. shiftMask, xK_c)
                    , (modm .|. shiftMask, xK_q)]

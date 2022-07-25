@@ -14,9 +14,10 @@ import           XMonad.Layout.Spacing
 import           XMonad.Layout.Tabbed
 import           XMonad.Layout.TwoPanePersistent
 import           XMonad.Util.EZConfig
-import           XMonad.Util.Run
 import           XMonad.Util.Ungrab
 import           Data.Map.Strict as M
+import           Data.ByteString.UTF8
+import           Data.ByteString.ShellEscape
 import           System.Exit
 import           Graphics.X11.ExtraTypes.XF86
 
@@ -34,9 +35,12 @@ polybar conf =
                    , ppTitle = shorten 48
                    , ppTitleSanitize = id
                    , ppOrder = \(ws:_:t:_) -> [ws, t]
-                   , ppOutput = \s -> safeSpawn
-                       "polybar-msg"
-                       ["action", "xmonad", "send", s]
+                   , ppOutput = spawn
+                       . ("polybar-msg action xmonad send " ++)
+                       . toString
+                       . bytes
+                       . bash
+                       . fromString
                    }
        , startupHook = do
            startupHook conf
@@ -122,7 +126,7 @@ main = xmonad . ewmh . docks . polybar $ myConfig
                   (className =? "Singular"))
             , ( (noModMask, xK_t)
               , runOrRaise "thunderbird" (className =? "Thunderbird"))])
-      , ((modm, xK_t), safeSpawn "polybar-msg" ["action", "date", "toggle"])
+      , ((modm, xK_z), spawn "polybar-msg action date toggle")
       , ((modm, xK_F6), spawn "pavucontrol")
       , ((noModMask, xF86XK_MonBrightnessUp), spawn "light -A 5")
       , ((noModMask, xF86XK_MonBrightnessDown), spawn "light -U 5")

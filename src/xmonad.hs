@@ -15,6 +15,7 @@ import           XMonad.Layout.Tabbed
 import           XMonad.Layout.TwoPanePersistent
 import           XMonad.Util.EZConfig
 import           XMonad.Util.Ungrab
+import           XMonad.Hooks.WindowSwallowing
 import           Data.Map.Strict as M
 import           Data.ByteString.UTF8
 import           Data.ByteString.ShellEscape
@@ -154,7 +155,9 @@ main = xmonad . ewmh . docks . polybar $ myConfig
           , terminal = "kitty"
           , layoutHook = myLayoutHook
           , manageHook = fullscreenManageHook
-          , handleEventHook = handleEventHook def <+> F.fullscreenEventHook
+          , handleEventHook = handleEventHook def
+              <+> F.fullscreenEventHook
+              <+> swallowEventHook (className =? "kitty") (return True)
           , modMask = modm
           , borderWidth = 1
           , focusFollowsMouse = False

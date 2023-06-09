@@ -1,0 +1,10 @@
+resolver: lts-20.24
+
+packages:
+- .
+
+system-ghc: true
+
+flags:
+  xmonad-contrib:
+    use_xft: true

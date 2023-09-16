@@ -16,6 +16,4 @@ executable xmonad
                      , xmonad-contrib >= 0.17
                      , X11 >= 1.10
                      , containers >= 0.6
-                     , shell-escape >= 0.2
-                     , utf8-string >= 1.0
   ghc-options:         -fasm -O2 -Wall -threaded

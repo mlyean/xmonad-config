@@ -1,12 +1,15 @@
+import qualified Data.Map.Strict as M
+import           Graphics.X11.ExtraTypes.XF86
+import           System.Exit
 import           XMonad
 import           XMonad.Actions.Submap
 import           XMonad.Actions.WindowGo
 import           XMonad.Hooks.DynamicLog
-import           XMonad.Hooks.EwmhDesktops as E
+import qualified XMonad.Hooks.EwmhDesktops as E
 import           XMonad.Hooks.ManageDocks
 import           XMonad.Hooks.WindowSwallowing
 import           XMonad.Layout.ComboP
-import           XMonad.Layout.Fullscreen as F
+import qualified XMonad.Layout.Fullscreen as F
 import           XMonad.Layout.MultiToggle
 import           XMonad.Layout.MultiToggle.Instances
 import           XMonad.Layout.NoBorders
@@ -15,13 +18,8 @@ import           XMonad.Layout.Spacing
 import           XMonad.Layout.Tabbed
 import           XMonad.Layout.TwoPanePersistent
 import           XMonad.Util.EZConfig
-import           XMonad.Util.Ungrab
-import           Data.Map.Strict as M
-import           Data.ByteString.UTF8
-import           Data.ByteString.ShellEscape
-import           System.Exit
-import           Graphics.X11.ExtraTypes.XF86
 import           XMonad.Util.Run (safeSpawn, safeSpawnProg)
+import           XMonad.Util.Ungrab
 
 polybar :: XConfig l -> XConfig l
 polybar conf =
@@ -35,7 +33,7 @@ polybar conf =
                    , ppUrgent = wrap "%{F#ff5555}" "%{F-}"
                    , ppSep = "%{F#bd93f9} | %{F-}"
                    , ppTitle = wrap "%{F#f8f8f2}" "%{F-}" . shorten 48
-                   , ppOrder = \(ws:_) -> [ws]
+                   , ppOrder = take 1
                    , ppOutput = \x -> safeSpawn
                        "polybar-msg"
                        ["action", "xmonad", "send", x]
@@ -46,7 +44,7 @@ polybar conf =
        }
 
 main :: IO ()
-main = xmonad . ewmh . docks . polybar $ myConfig
+main = xmonad . E.ewmh . docks . polybar $ myConfig
   where
     modm = mod4Mask
 
@@ -77,7 +75,7 @@ main = xmonad . ewmh . docks . polybar $ myConfig
       (ClassName "vifm")
 
     myLayoutHook = avoidStruts
-      . fullscreenFull
+      . F.fullscreenFull
       . mkToggle (NBFULL ?? EOT)
       . onWorkspace "2" ws2Layout
       . onWorkspace "3" ws3Layout
@@ -162,7 +160,7 @@ main = xmonad . ewmh . docks . polybar $ myConfig
           , focusedBorderColor = "#bd93f9"
           , terminal = "kitty"
           , layoutHook = myLayoutHook
-          , manageHook = fullscreenManageHook
+          , manageHook = F.fullscreenManageHook
           , handleEventHook = handleEventHook def
               <+> F.fullscreenEventHook
               <+> swallowEventHook

@@ -142,6 +142,10 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
         , safeSpawn
             "wpctl"
             ["set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+"])
+      , ((noModMask, xF86XK_AudioStop), safeSpawn "playerctl" ["stop"])
+      , ((noModMask, xF86XK_AudioPrev), safeSpawn "playerctl" ["previous"])
+      , ((noModMask, xF86XK_AudioPlay), safeSpawn "playerctl" ["play-pause"])
+      , ((noModMask, xF86XK_AudioNext), safeSpawn "playerctl" ["next"])
       , ( (modm, xK_m)
         , submap . M.fromList
           $ [ ((noModMask, xK_p), safeSpawn "playerctl" ["play-pause"])

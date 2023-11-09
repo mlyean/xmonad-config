@@ -1,25 +1,27 @@
 import qualified Data.Map.Strict as M
 import           Graphics.X11.ExtraTypes.XF86
-import           System.Exit
+import           System.Exit (exitSuccess)
 import           XMonad
-import           XMonad.Actions.Submap
-import           XMonad.Actions.WindowGo
+import           XMonad.Actions.CopyWindow (copyToAll)
+import           XMonad.Actions.Submap (submap)
+import           XMonad.Actions.WindowGo (runOrRaise, raiseMaybe)
 import           XMonad.Hooks.DynamicLog
 import qualified XMonad.Hooks.EwmhDesktops as E
 import           XMonad.Hooks.ManageDocks
-import           XMonad.Hooks.WindowSwallowing
+import           XMonad.Hooks.WindowSwallowing (swallowEventHook)
 import           XMonad.Layout.ComboP
 import qualified XMonad.Layout.Fullscreen as F
 import           XMonad.Layout.MultiToggle
 import           XMonad.Layout.MultiToggle.Instances
-import           XMonad.Layout.NoBorders
-import           XMonad.Layout.PerWorkspace
+import           XMonad.Layout.NoBorders (noBorders, smartBorders)
+import           XMonad.Layout.PerWorkspace (onWorkspace)
 import           XMonad.Layout.Spacing
 import           XMonad.Layout.Tabbed
 import           XMonad.Layout.TwoPanePersistent
-import           XMonad.Util.EZConfig
+import           XMonad.Util.EZConfig (additionalKeys, removeKeys)
 import           XMonad.Util.Run (safeSpawn, safeSpawnProg)
-import           XMonad.Util.Ungrab
+import           XMonad.Util.Ungrab (unGrab)
+import           XMonad.Util.WindowProperties (getProp32)
 
 polybar :: XConfig l -> XConfig l
 polybar conf =
@@ -42,6 +44,18 @@ polybar conf =
            startupHook conf
            spawn "$HOME/.config/polybar/launch.sh"
        }
+
+getNetWMState :: Window -> X [Atom]
+getNetWMState w = do
+  atom <- getAtom "_NET_WM_STATE"
+  maybe [] (map fromIntegral) <$> getProp32 atom w
+
+hasNetWMState :: String -> Query Bool
+hasNetWMState st = do
+  window <- ask
+  wmstate <- liftX $ getNetWMState window
+  atom <- liftX $ getAtom st
+  return $ elem atom wmstate
 
 main :: IO ()
 main = xmonad . E.ewmh . docks . polybar $ myConfig
@@ -164,7 +178,11 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
           , focusedBorderColor = "#bd93f9"
           , terminal = "kitty"
           , layoutHook = myLayoutHook
-          , manageHook = F.fullscreenManageHook
+          , manageHook = composeAll
+              [ F.fullscreenManageHook
+              , hasNetWMState "_NET_WM_STATE_ABOVE" --> doFloat
+              , hasNetWMState "_NET_WM_STATE_STICKY" --> doF copyToAll
+              , appName =? "Toolkit" --> doF copyToAll] -- Firefox PIP
           , handleEventHook = handleEventHook def
               <+> F.fullscreenEventHook
               <+> swallowEventHook

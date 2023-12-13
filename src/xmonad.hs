@@ -28,12 +28,14 @@ polybar conf =
   conf { logHook = do
            logHook conf
            dynamicLogWithPP
-             $ def { ppCurrent = wrap "%{F#bd93f9}" "%{F-}"
-                   , ppVisible = wrap "%{F#f1fa8c}" "%{F-}"
-                   , ppHidden = wrap "%{F#f8f8f2}" "%{F-}"
-                   , ppHiddenNoWindows = wrap "%{F#6272a4}" "%{F-}"
-                   , ppUrgent = wrap "%{F#ff5555}" "%{F-}"
-                   , ppSep = "%{F#bd93f9} | %{F-}"
+             $ def { ppCurrent = wrap
+                       "%{F#ff79c6}%{B#44475a}%{u#bd93f9}%{+u} "
+                       " %{F- B- -u}"
+                   , ppVisible = wrap "%{F#ff79c6} " " %{F-}"
+                   , ppHidden = wrap "%{F#f8f8f2} " " %{F-}"
+                   , ppHiddenNoWindows = const ""
+                   , ppUrgent = wrap "%{F#ff5555} " " %{F-}"
+                   , ppWsSep = ""
                    , ppTitle = wrap "%{F#f8f8f2}" "%{F-}" . shorten 48
                    , ppOrder = take 1
                    , ppOutput = \x -> safeSpawn
@@ -74,11 +76,12 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
             , activeTextColor = "#bd93f9"
             , inactiveTextColor = "#f8f8f2"
             , urgentTextColor = "#ff5555"
-            , fontName = "xft:Fira Code:size=11"
+            , fontName = "xft:Fira Code:size=12"
             }
 
     defaultLayout =
-      spacingRaw True (Border 6 6 6 6) False (Border 6 6 6 6) False myTall
+      spacingRaw True (Border 10 10 10 10) False (Border 10 10 10 10) False
+      $ myTall
 
     ws2Layout = noBorders myTabbed
 
@@ -99,7 +102,7 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
     myKeys =
       [ ((modm, xK_Return), safeSpawnProg "kitty")
       , ((modm, xK_b), sendMessage ToggleStruts)
-      , ((modm, xK_p), safeSpawn "rofi" ["-show", "drun"])
+      , ((modm, xK_p), safeSpawn "rofi" ["-show", "drun", "-monitor", "-1"])
       , ((modm, xK_q), kill)
       , ((modm, xK_f), sendMessage (Toggle NBFULL))
       , ( (modm, xK_g)
@@ -110,6 +113,8 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
           $ [ ((noModMask, xK_b), safeSpawn "polybar-msg" ["cmd", "restart"])
             , ((noModMask, xK_l), safeSpawn "loginctl" ["lock-session"])
             , ((noModMask, xK_o), safeSpawn "systemctl" ["poweroff"])
+            , ( (noModMask, xK_m)
+              , safeSpawn "autorandr" ["--change", "--force"])
             , ((noModMask, xK_q), io exitSuccess)
             , ((noModMask, xK_r), safeSpawn "systemctl" ["reboot"])
             , ((noModMask, xK_x), safeSpawnProg "xkill")])
@@ -159,6 +164,7 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
       , ((noModMask, xF86XK_AudioStop), safeSpawn "playerctl" ["stop"])
       , ((noModMask, xF86XK_AudioPrev), safeSpawn "playerctl" ["previous"])
       , ((noModMask, xF86XK_AudioPlay), safeSpawn "playerctl" ["play-pause"])
+      , ((noModMask, xF86XK_AudioPause), safeSpawn "playerctl" ["play-pause"])
       , ((noModMask, xF86XK_AudioNext), safeSpawn "playerctl" ["next"])
       , ( (modm, xK_m)
         , submap . M.fromList

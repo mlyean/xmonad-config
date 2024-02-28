@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 import qualified Data.Map.Strict as M
 import           Graphics.X11.ExtraTypes.XF86
 import           System.Exit (exitSuccess)
@@ -22,6 +24,7 @@ import           XMonad.Util.EZConfig (additionalKeys, removeKeys)
 import           XMonad.Util.Run (safeSpawn, safeSpawnProg)
 import           XMonad.Util.Ungrab (unGrab)
 import           XMonad.Util.WindowProperties (getProp32)
+import           Data.Bifunctor (first)
 
 polybar :: XConfig l -> XConfig l
 polybar conf =
@@ -58,6 +61,15 @@ hasNetWMState st = do
   wmstate <- liftX $ getNetWMState window
   atom <- liftX $ getAtom st
   return $ elem atom wmstate
+
+withModMask :: KeyMask -> KeySym -> (KeyMask, KeySym)
+withModMask m k = (m, k)
+
+mapWithModMask :: KeyMask -> [(KeySym, X ())] -> [((KeyMask, KeySym), X ())]
+mapWithModMask m = map (first (m, ))
+
+submapList :: [((KeyMask, KeySym), X ())] -> X ()
+submapList = submap . M.fromList
 
 main :: IO ()
 main = xmonad . E.ewmh . docks . polybar $ myConfig
@@ -99,93 +111,113 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
       . smartBorders
       $ defaultLayout
 
-    myKeys =
-      [ ((modm, xK_Return), safeSpawnProg "kitty")
-      , ((modm, xK_b), sendMessage ToggleStruts)
-      , ((modm, xK_p), safeSpawn "rofi" ["-show", "drun", "-monitor", "-1"])
-      , ((modm, xK_q), kill)
-      , ((modm, xK_f), sendMessage (Toggle NBFULL))
-      , ( (modm, xK_g)
-        , toggleWindowSpacingEnabled <+> toggleScreenSpacingEnabled)
-      , ((modm, xK_s), sendMessage SwapWindow)
-      , ( (modm, xK_x)
-        , submap . M.fromList
-          $ [ ((noModMask, xK_b), safeSpawn "polybar-msg" ["cmd", "restart"])
-            , ((noModMask, xK_l), safeSpawn "loginctl" ["lock-session"])
-            , ((noModMask, xK_o), safeSpawn "systemctl" ["poweroff"])
-            , ( (noModMask, xK_m)
-              , submap . M.fromList
-                $ [ ( (noModMask, xK_a)
-                    , safeSpawn "autorandr" ["--change", "--force"])
-                  , ( (noModMask, xK_m)
-                    , safeSpawn "autorandr" ["--load", "mobile"])
-                  , ( (noModMask, xK_e)
-                    , safeSpawn "autorandr" ["--load", "external-only"])
-                  , ( (noModMask, xK_d)
-                    , safeSpawn "autorandr" ["--load", "docked"])])
-            , ((noModMask, xK_q), io exitSuccess)
-            , ((noModMask, xK_r), safeSpawn "systemctl" ["reboot"])
-            , ((noModMask, xK_x), safeSpawnProg "xkill")])
-      , ( (modm, xK_r)
-        , submap . M.fromList
-          $ [ ( (noModMask, xK_b)
-              , runOrRaise "firefox" (className =? "firefox"))
-            , ((noModMask, xK_d), safeSpawnProg "discord")
-            , ( (noModMask, xK_f)
-              , raiseMaybe
-                  (safeSpawn "kitty" ["--class", "vifm", "vifm"])
-                  (className =? "vifm"))
-            , ( (shiftMask, xK_f)
-              , runOrRaise "pcmanfm" (className =? "pcmanfm"))
-            , ( (noModMask, xK_p)
-              , raiseMaybe
-                  (safeSpawn "kitty" ["--class", "gp", "gp"])
-                  (className =? "gp"))
-            , ( (noModMask, xK_g)
-              , raiseMaybe
-                  (safeSpawn "kitty" ["--class", "GAP", "gap"])
-                  (className =? "GAP"))
-            , ( (noModMask, xK_m)
-              , runOrRaise "mathematica" (className =? "Mathematica"))
-            , ( (noModMask, xK_n)
-              , runOrRaise "notion-app" (className =? "notion-app"))
-            , ( (noModMask, xK_s)
-              , raiseMaybe
-                  (safeSpawn "kitty" ["--class", "Singular", "Singular"])
-                  (className =? "Singular"))
-            , ( (noModMask, xK_t)
-              , runOrRaise "thunderbird" (className =? "Thunderbird"))])
-      , ((modm, xK_z), safeSpawn "polybar-msg" ["action", "date", "toggle"])
-      , ((modm, xK_a), safeSpawnProg "pavucontrol")
-      , ((noModMask, xF86XK_MonBrightnessUp), safeSpawn "light" ["-A", "5"])
-      , ((noModMask, xF86XK_MonBrightnessDown), safeSpawn "light" ["-U", "5"])
-      , ((modm, xK_F5), safeSpawn "redshift" ["-P", "-O", "2500"])
-      , ((modm, xK_F6), safeSpawn "redshift" ["-x"])
-      , ( (noModMask, xF86XK_AudioMute)
-        , safeSpawn "wpctl" ["set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
-      , ( (noModMask, xF86XK_AudioLowerVolume)
-        , safeSpawn "wpctl" ["set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
-      , ( (noModMask, xF86XK_AudioRaiseVolume)
-        , safeSpawn
-            "wpctl"
-            ["set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+"])
-      , ((noModMask, xF86XK_AudioStop), safeSpawn "playerctl" ["stop"])
-      , ((noModMask, xF86XK_AudioPrev), safeSpawn "playerctl" ["previous"])
-      , ((noModMask, xF86XK_AudioPlay), safeSpawn "playerctl" ["play-pause"])
-      , ((noModMask, xF86XK_AudioPause), safeSpawn "playerctl" ["play-pause"])
-      , ((noModMask, xF86XK_AudioNext), safeSpawn "playerctl" ["next"])
-      , ( (modm, xK_m)
-        , submap . M.fromList
-          $ [ ((noModMask, xK_p), safeSpawn "playerctl" ["play-pause"])
-            , ((noModMask, xK_b), safeSpawn "playerctl" ["previous"])
-            , ((noModMask, xK_n), safeSpawn "playerctl" ["next"])
-            , ((noModMask, xK_s), safeSpawn "playerctl" ["stop"])])
-      , ( (noModMask, xK_Print)
+    mediaKeys =
+      ( (modm, xK_m)
+      , submapList $ mapWithModMask noModMask (zip mediaKeys2 mediaActions))
+      :mapWithModMask noModMask (zip mediaKeys1 mediaActions)
+      where
+        mediaKeys1 = [ xF86XK_AudioPlay
+                     , xF86XK_AudioPause
+                     , xF86XK_AudioStop
+                     , xF86XK_AudioPrev
+                     , xF86XK_AudioNext]
+
+        mediaKeys2 = [xK_p, xK_p, xK_s, xK_b, xK_n]
+
+        playerctl s = safeSpawn "playerctl" [s]
+
+        mediaActions = [ playerctl "play-pause"
+                       , playerctl "play-pause"
+                       , playerctl "stop"
+                       , playerctl "previous"
+                       , playerctl "next"]
+
+    audioKeys = ((modm, xK_a), safeSpawnProg "pavucontrol")
+      :mapWithModMask
+        noModMask
+        [ ( xF86XK_AudioMute
+          , wpctl ["set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+        , ( xF86XK_AudioLowerVolume
+          , wpctl ["set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
+        , ( xF86XK_AudioRaiseVolume
+          , wpctl ["set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+"])]
+      where
+        wpctl = safeSpawn "wpctl"
+
+    brightnessKeys = mapWithModMask
+      noModMask
+      [ (xF86XK_MonBrightnessUp, light ["-A", "5"])
+      , (xF86XK_MonBrightnessDown, light ["-U", "5"])]
+      where
+        light = safeSpawn "light"
+
+    displayKeys = mapWithModMask
+      noModMask
+      [ (xK_a, autorandr ["--change", "--force"])
+      , (xK_m, autorandr ["--load", "mobile"])
+      , (xK_e, autorandr ["--load", "external-only"])
+      , (xK_d, autorandr ["--load", "docked"])]
+      where
+        autorandr x = spawn "xrandr --auto" >> safeSpawn "autorandr" x
+
+    screenshotKeys =
+      [ ( (noModMask, xK_Print)
         , spawn "scrot $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")
       , ( (controlMask, xK_Print)
         , unGrab
           >> spawn
             "scrot -f -s $HOME/Pictures/screenshots/scrot-%Y-%m-%d-%H%M%S.png")]
+
+    myKeys = mapWithModMask
+      modm
+      [ (xK_Return, safeSpawnProg "kitty")
+      , (xK_b, sendMessage ToggleStruts)
+      , (xK_p, safeSpawn "rofi" ["-show", "drun", "-monitor", "-1"])
+      , (xK_q, kill)
+      , (xK_f, sendMessage (Toggle NBFULL))
+      , (xK_g, toggleWindowSpacingEnabled <+> toggleScreenSpacingEnabled)
+      , (xK_s, sendMessage SwapWindow)
+      , ( xK_x
+        , submapList . mapWithModMask noModMask
+          $ [ (xK_b, safeSpawn "polybar-msg" ["cmd", "restart"])
+            , (xK_l, safeSpawn "loginctl" ["lock-session"])
+            , (xK_o, safeSpawn "systemctl" ["poweroff"])
+            , (xK_m, submapList displayKeys)
+            , (xK_q, io exitSuccess)
+            , (xK_r, safeSpawn "systemctl" ["reboot"])
+            , (xK_x, safeSpawnProg "xkill")])
+      , ( xK_r
+        , submapList
+          $ mapWithModMask
+            noModMask
+            [ (xK_b, runOrRaise "firefox" (className =? "firefox"))
+            , (xK_d, safeSpawnProg "discord")
+            , ( xK_f
+              , raiseMaybe
+                  (safeSpawn "kitty" ["--class", "vifm", "vifm"])
+                  (className =? "vifm"))
+            , ( xK_p
+              , raiseMaybe
+                  (safeSpawn "kitty" ["--class", "gp", "gp"])
+                  (className =? "gp"))
+            , ( xK_g
+              , raiseMaybe
+                  (safeSpawn "kitty" ["--class", "GAP", "gap"])
+                  (className =? "GAP"))
+            , (xK_m, runOrRaise "mathematica" (className =? "Mathematica"))
+            , (xK_n, runOrRaise "notion-app" (className =? "notion-app"))
+            , ( xK_s
+              , raiseMaybe
+                  (safeSpawn "kitty" ["--class", "Singular", "Singular"])
+                  (className =? "Singular"))
+            , (xK_t, runOrRaise "thunderbird" (className =? "Thunderbird"))]
+          ++ [ ( (shiftMask, xK_f)
+               , runOrRaise "pcmanfm" (className =? "pcmanfm"))])
+      , (xK_z, safeSpawn "polybar-msg" ["action", "date", "toggle"])]
+      ++ mediaKeys
+      ++ audioKeys
+      ++ brightnessKeys
+      ++ screenshotKeys
 
     myConfig =
       def { normalBorderColor = "#6272a4"

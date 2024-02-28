@@ -62,9 +62,6 @@ hasNetWMState st = do
   atom <- liftX $ getAtom st
   return $ elem atom wmstate
 
-withModMask :: KeyMask -> KeySym -> (KeyMask, KeySym)
-withModMask m k = (m, k)
-
 mapWithModMask :: KeyMask -> [(KeySym, X ())] -> [((KeyMask, KeySym), X ())]
 mapWithModMask m = map (first (m, ))
 
@@ -228,6 +225,7 @@ main = xmonad . E.ewmh . docks . polybar $ myConfig
               [ F.fullscreenManageHook
               , hasNetWMState "_NET_WM_STATE_ABOVE" --> doFloat
               , hasNetWMState "_NET_WM_STATE_STICKY" --> doF copyToAll
+              , title =? "zoom_linux_float_video_window" --> doFloat
               , appName =? "Toolkit" --> doF copyToAll] -- Firefox PIP
           , handleEventHook = handleEventHook def
               <+> F.fullscreenEventHook
